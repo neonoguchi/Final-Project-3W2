@@ -1,0 +1,14 @@
+import pygame
+import random
+import time
+
+
+def main():
+    pygame.init()
+    pygame.display.set_caption("Simplified RPG")
+
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
