@@ -45,6 +45,7 @@ def main():
             y += vel
         
         screen.fill((35,35,35))
+        # background = pygame.image.load('assets/background_image_retro.jpg').convert_alpha()
         pygame.draw.rect(screen, (0,200,0), (x, y, width, height))
         pygame.display.update()
         clock.tick(60) # FPS
