@@ -9,10 +9,22 @@ screen_dimensions = (screen_width,screen_height)
 
 
 class Player():
-    def __init__(self, pos, size):
-        self.pos = pos
+    def __init__(self, x, y, size):
         self.size = size
+        self.x = x
+        self.y = y
         self.color = pygame.Color(0, 210, 0)
+
+    def boundaries(self):
+        if self.y <= 0:
+            self.y = 0
+        elif self.y >= screen_height:
+            self.y = screen_height
+        
+        if self.x <= 0:
+            self.x = 0
+        elif self.x >= screen_width:
+            self.x = screen_width
     
     def draw(self):
         screen_dimensions.blit()
@@ -27,11 +39,11 @@ def main():
     #player constants
     x = 400
     y = 550
-    P1 = Player(x,y)
-    width = 30
-    height = 30
+    width = 10
+    height = 10
+    size = (width, height)
+    P1 = Player(x,y,size)
     vel = 5
-
     
     #game loop
     running = True
@@ -41,21 +53,21 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        # Movement
+        #movement
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] and y > 0:
             y -= vel
         if keys[pygame.K_a] and x > 0:
             x -= vel
-        if keys[pygame.K_s] and y < 800 - height:
+        if keys[pygame.K_s] and y < screen_height - height:
             y += vel
-        if keys[pygame.K_d] and x < 800 - width:
+        if keys[pygame.K_d] and x < screen_width - width:
             x += vel
         
         screen.fill((15,30,15))
         pygame.draw.rect(screen, (0,200,0), (x, y, width, height))
         pygame.display.update()
-        clock.tick(60) # FPS
+        clock.tick(60) #fps
 
 
 if __name__ == "__main__":
