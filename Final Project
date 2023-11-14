@@ -2,50 +2,57 @@ import pygame
 import random
 import time
 
-# class Player():
-   
-#     def __init__(self, size=10, pos=(400,200), life=100):
-#         self.rect = pygame.Rect()
-#         self.name = "Player 1"
-#         self.size = size
-#         self.pos = pos
-#         self.color = pygame.Color(0,200,0)
-#         self.life = life
+#window dimensions
+screen_width = 800
+screen_height = 600
+screen_dimensions = (screen_width,screen_height)
+
+
+class Player():
+    def __init__(self, pos, size):
+        self.pos = pos
+        self.size = size
+        self.color = pygame.Color(0, 210, 0)
+    
+    def draw(self):
+        screen_dimensions.blit()
 
 def main():
     
     pygame.init()
     pygame.display.set_caption("Simple RPG")
-    screen = pygame.display.set_mode((800, 800))
+    screen = pygame.display.set_mode(screen_dimensions)
     clock = pygame.time.Clock()
-    
-    # Player Constants 
+
+    #player constants
     x = 400
-    y = 400
+    y = 550
+    P1 = Player(x,y)
     width = 30
     height = 30
     vel = 5
+
     
+    #game loop
     running = True
     while running:
 
+        #event handler
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
         # Movement
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and x > 0:
-            x -= vel
-        if keys[pygame.K_RIGHT] and x < 800 - width:
-            x += vel
-        if keys[pygame.K_UP] and y > 0:
+        if keys[pygame.K_w] and y > 0:
             y -= vel
-        if keys[pygame.K_DOWN] and y < 800 - height:
+        if keys[pygame.K_a] and x > 0:
+            x -= vel
+        if keys[pygame.K_s] and y < 800 - height:
             y += vel
+        if keys[pygame.K_d] and x < 800 - width:
+            x += vel
         
-        screen.fill((35,35,35))
-        # background = pygame.image.load('assets/background_image_retro.jpg').convert_alpha()
+        screen.fill((15,30,15))
         pygame.draw.rect(screen, (0,200,0), (x, y, width, height))
         pygame.display.update()
         clock.tick(60) # FPS
