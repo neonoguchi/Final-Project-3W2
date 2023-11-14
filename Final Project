@@ -9,13 +9,20 @@ screen_dimensions = (screen_width,screen_height)
 
 
 class Player():
-    def __init__(self, x, y, size):
+    def __init__(self, x, y, size, health=100):
         self.size = size
         self.x = x
         self.y = y
         self.color = pygame.Color(0, 210, 0)
+        self.health = health
+        self.dead = False
 
-    def boundaries(self):
+    def update(self):
+        #checks health for death
+        if self.health < 0:
+            self.dead = True
+
+    def borders(self):
         if self.y <= 0:
             self.y = 0
         elif self.y >= screen_height:
@@ -27,10 +34,11 @@ class Player():
             self.x = screen_width
     
     def draw(self):
+        if self.dead:
+            return
         screen_dimensions.blit()
 
 def main():
-    
     pygame.init()
     pygame.display.set_caption("Simple RPG")
     screen = pygame.display.set_mode(screen_dimensions)
@@ -39,8 +47,8 @@ def main():
     #player constants
     x = 400
     y = 550
-    width = 10
-    height = 10
+    width = 25
+    height = 25
     size = (width, height)
     P1 = Player(x,y,size)
     vel = 5
