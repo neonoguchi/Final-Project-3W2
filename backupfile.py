@@ -8,7 +8,7 @@ screen_height = 600
 screen_dimensions = (screen_width,screen_height)
 
 door = pygame.Rect(200, 0, 60, 10)
-door_color = 'Yellow'
+door_color = 'Red'
 
 class Player():
     def __init__(self, x, y, size, health=100):
@@ -72,16 +72,10 @@ def main():
         if keys[pygame.K_d] and x < screen_width - width:
             x += velo
         
-        #door detection
-        if pygame.Rect(x, y, width, height).colliderect(door):
-            door_color = 'Yellow'
-        else:
-            door_color = 'Red'
-
         #background fill
         screen.fill((15,30,15))
         
-        #draw
+        #player rectangle
         pygame.draw.rect(screen, (0,200,0), (x, y, width, height))
         pygame.draw.rect(screen, door_color, door)
         
