@@ -53,6 +53,7 @@ class Door():
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = 'Yellow'
+        self.pos = (x, y)
         self.is_open = False
     
     def update(self, player):
@@ -74,14 +75,10 @@ class Door():
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
 
-def reset_level(player, door):
-    # Set player and door back to their initial positions
+def initialize_level(player, door):
     player.rect.x = 600
     player.rect.y = 550
     door.color = 'Yellow'
-
-def new_level(current_level):
-    return current_level + 1
 
 def main():
     pygame.init()
@@ -92,6 +89,8 @@ def main():
     door = Door(200, 0, 60, 10)
     level = 1
     
+    initialize_level(player, door)
+
     #game loop
     running = True
     while running:
@@ -114,11 +113,17 @@ def main():
         door.draw(screen)
 
         if door.is_open:
-            level = new_level(level)
-            reset_level(player, door)
+            initialize_level(player, door)
+            level += 1
             print(f"Door opened! Transitioning to level {level}")
+            
+            
             # Reset the door for the next level
-            door = Door(200, 0, 60, 10)
+            topside = Door(random.randrange(0, 800, 60), 0, 60, 10)
+            bottomside = Door(random.randrange(0, 800, 60), (600 - 10), 60, 10)
+            leftside = Door(0, random.randrange(0, 600, 60), 10, 60)
+            rightside = Door((800 - 10), random.randrange(0, 600, 60), 10, 60)
+            door =  random.choice([topside, bottomside, leftside, rightside])
         
         pygame.display.update()
         clock.tick(60) #fps
