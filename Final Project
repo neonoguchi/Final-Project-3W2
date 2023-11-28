@@ -53,6 +53,7 @@ class Door():
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = 'Yellow'
+        self.is_open = False
     
     def update(self, player):
         if self.rect.colliderect(player.rect):
@@ -60,7 +61,12 @@ class Door():
             #[E] interact with door
             if pygame.key.get_pressed()[pygame.K_e]:
                 #change to next level
-                print("Door opened!")
+                
+
+
+
+                print("Add code to change levesl!")
+                self.is_open = True
         else:
             self.color = 'Red'
     
@@ -68,6 +74,14 @@ class Door():
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
 
+def reset_level(player, door):
+    # Set player and door back to their initial positions
+    player.rect.x = 600
+    player.rect.y = 550
+    door.color = 'Yellow'
+
+def new_level(current_level):
+    return current_level + 1
 
 def main():
     pygame.init()
@@ -76,6 +90,7 @@ def main():
     clock = pygame.time.Clock()
     player = Player()
     door = Door(200, 0, 60, 10)
+    level = 1
     
     #game loop
     running = True
@@ -97,6 +112,13 @@ def main():
         #draw
         player.draw(screen)
         door.draw(screen)
+
+        if door.is_open:
+            level = new_level(level)
+            reset_level(player, door)
+            print(f"Door opened! Transitioning to level {level}")
+            # Reset the door for the next level
+            door = Door(200, 0, 60, 10)
         
         pygame.display.update()
         clock.tick(60) #fps
