@@ -61,12 +61,6 @@ class Door():
             self.color = 'Yellow'
             #[E] interact with door
             if pygame.key.get_pressed()[pygame.K_e]:
-                #change to next level
-                
-
-
-
-                print("Add code to change levesl!")
                 self.is_open = True
         else:
             self.color = 'Red'
@@ -117,8 +111,7 @@ def main():
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             
-            
-            # Reset the door for the next level
+            #door locations simplified
             topside = Door(random.randrange(0, 800, 60), 0, 60, 10)
             bottomside = Door(random.randrange(0, 800, 60), (600 - 10), 60, 10)
             leftside = Door(0, random.randrange(0, 600, 60), 10, 60)
