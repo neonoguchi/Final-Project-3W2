@@ -23,6 +23,10 @@ class Player():
         if self.health < 0:
             self.dead = True
     
+    def take_dmg(self, damage):
+        self.health -= damage
+        self.update()
+    
     def update_position(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] and self.rect.y > 0:
@@ -49,12 +53,10 @@ class Player():
         if not self.dead:
             pygame.draw.rect(screen, self.color, self.rect)
 
-
 class Door():
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = 'Yellow'
-        self.pos = (x, y)
         self.is_open = False
     
     def update(self, player):
@@ -69,7 +71,6 @@ class Door():
     def draw(self,screen):
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
-
 class Score():
     def __init__(self, level, pos=(700,20)):
         self.level = level
@@ -80,40 +81,85 @@ class Score():
         text = self.font.render(f"Lvl: {self.level}", True, 'White')
         screen.blit(text, self.pos)
 
-
 class Hostile():
-    def __init__(self):
-        self.rect
+    def __init__(self, width=40, height=40):
+        self.width = width
+        self.height = height
+        self.rect = pygame.Rect(random.randrange(screen_width - width), random.randrange(screen_height - height), width, height)
+        self.color = pygame.Color('Red')
+        self.velocity = 1
+        self.direction_x = random.choice([-1, 1])
+        self.direction_y = random.choice([-1, 1])
+
+    def update(self, player):
+        #damage to player
+        if self.rect.colliderect(player.rect):
+            self.color = 'Blue'
+            player.take_dmg(5)
+            print(player.health)
+        else:
+            self.color = 'Red'
+    
+    def _check_level(self, score):
+        if score.level <= 5:
+            return
+        if score.level > 5:
+            self.velocity *= 2
+        if score.level > 10:
+            self.velocity *= 3
 
 
-def generate_level(player, door):
-    player.rect.x = 600 #change to 'position of previous level's door location'
-    player.rect.y = 550 #change as well^^^
+    def update_position(self):
+        #movement of hostile
+        self.rect.x += self.velocity * self.direction_x
+        self.rect.y += self.velocity * self.direction_y
+        #east/west walls
+        if self.rect.left < 0 or self.rect.right > screen_width:
+            self.direction_x *= -1
+        #north/south walls
+        if self.rect.top < 0 or self.rect.bottom > screen_height:
+            self.direction_y *= -1
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+
+def generate_level(player, door, hostile):
+    #door changes
+    if door.rect.x == 0:
+        player.rect.topleft = (screen_width - player.rect.width, door.rect.centery - player.rect.height // 2)
+    elif door.rect.x == screen_width - door.rect.width:
+        player.rect.topleft = (0, door.rect.centery - player.rect.height // 2)
+    elif door.rect.y == 0:
+        player.rect.topleft = (door.rect.centerx - player.rect.width // 2, screen_height - player.rect.height)
+    elif door.rect.y == screen_height - door.rect.height:
+        player.rect.topleft = (door.rect.centerx - player.rect.width // 2, 0)
     door.color = 'Yellow'
+    door.is_open = False
+
+    hostile.rect.x = random.randrange(screen_width - hostile.width)
+    hostile.rect.y = random.randrange(screen_height - hostile.height)
 
 def generate_new_door():
     #door locations simplified
-    topside = Door(random.randrange(0, 800 - 60, 60), 0, 60, 10)
-    bottomside = Door(random.randrange(0, 800 - 60, 60), (600 - 10), 60, 10)
-    leftside = Door(0, random.randrange(0, 600, 60), 10, 60)
-    rightside = Door((800 - 10), random.randrange(0, 600, 60), 10, 60)
+    topside = Door(random.randrange(0, screen_width - 60, 60), 0, 60, 10)
+    bottomside = Door(random.randrange(0, screen_width - 60, 60), (screen_height - 10), 60, 10)
+    leftside = Door(0, random.randrange(0, screen_height, 60), 10, 60)
+    rightside = Door((screen_width - 10), random.randrange(0, screen_height, 60), 10, 60)
     return random.choice([topside, bottomside, leftside, rightside])
-
-# def generate_pathways():
-    # Randomly generated pathways,
-    # - Use a square (bigger than player size), to be laid against copies of itself to create paths (maybe..?)
 
 def main():
     pygame.init()
     pygame.display.set_caption("Simple RPG")
     screen = pygame.display.set_mode(screen_dimensions)
     clock = pygame.time.Clock()
+
     player = Player()
     door = Door(200, 0, 60, 10)
     level = 1
     score= Score(level)
+    hostile = Hostile()
     
-    generate_level(player, door)
+    generate_level(player, door, hostile)
 
     #game loop
     running = True
@@ -127,8 +173,20 @@ def main():
         #player updates
         player.update_position()
 
+        #hostile updates
+        hostile.update_position()
+        hostile.update(player)
+
         # door detection
         door.update(player)
+
+        #game over
+        if player.dead:
+            #display game over screen that has:
+            #"GAME OVER" text
+            #retry button
+            #quit button
+            running = False
 
         #background fill
         screen.fill((15,30,15))
@@ -136,12 +194,13 @@ def main():
         player.draw(screen)
         door.draw(screen)
         score.draw(screen)
+        hostile.draw(screen)
 
         if door.is_open:
-            generate_level(player, door)
+            generate_level(player, door, hostile)
             level += 1
             print(f"Door opened! Transitioning to level {level}")
-            score= Score(level)
+            score.level = level
             door = generate_new_door()
         
         pygame.display.update()
