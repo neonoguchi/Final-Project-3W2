@@ -68,6 +68,14 @@ class Door():
         else:
             self.color = 'Red'
     
+    def generate_new_door():
+        #door locations simplified
+        topside = Door(random.randrange(0, screen_width - 60, 60), 0, 60, 10)
+        bottomside = Door(random.randrange(0, screen_width - 60, 60), (screen_height - 10), 60, 10)
+        leftside = Door(0, random.randrange(0, screen_height, 60), 10, 60)
+        rightside = Door((screen_width - 10), random.randrange(0, screen_height, 60), 10, 60)
+        return random.choice([topside, bottomside, leftside, rightside])
+
     def draw(self,screen):
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
@@ -139,14 +147,6 @@ def generate_level(player, door, hostile):
     hostile.rect.x = random.randrange(screen_width - hostile.width)
     hostile.rect.y = random.randrange(screen_height - hostile.height)
 
-def generate_new_door():
-    #door locations simplified
-    topside = Door(random.randrange(0, screen_width - 60, 60), 0, 60, 10)
-    bottomside = Door(random.randrange(0, screen_width - 60, 60), (screen_height - 10), 60, 10)
-    leftside = Door(0, random.randrange(0, screen_height, 60), 10, 60)
-    rightside = Door((screen_width - 10), random.randrange(0, screen_height, 60), 10, 60)
-    return random.choice([topside, bottomside, leftside, rightside])
-
 def main():
     pygame.init()
     pygame.display.set_caption("Simple RPG")
@@ -201,7 +201,7 @@ def main():
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             score.level = level
-            door = generate_new_door()
+            door = Door.generate_new_door()
         
         pygame.display.update()
         clock.tick(60) #fps
