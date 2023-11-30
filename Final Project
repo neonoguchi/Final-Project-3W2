@@ -4,14 +4,12 @@ import time
 
 #window dimensions
 window_width = 800
-window_height = 800
+window_height = 670
 window_dimensions = (window_width, window_height)
 
 screen_width = 800
 screen_height = 600
 screen_dimensions = (screen_width,screen_height)
-
-velo = 5
 
 class Player():
     def __init__(self, x=600, y=550, width=25, height=25, health=100):
@@ -19,13 +17,13 @@ class Player():
         self.height = height
         self.rect = pygame.Rect(x, y, width, height)
         self.color = pygame.Color(0, 210, 0)
+        self.velo = 5
         self.health = health
         self.max_health = health
         self.dead = False
 
     def update(self):
-        self._update_position()
-        self._borders()
+        self._movement()
         #checks health for death
         if self.health < 1:
             self.dead = True
@@ -34,40 +32,36 @@ class Player():
         self.health -= damage
         self.update()
     
-    def _update_position(self):
+    def _movement(self):
+        #wasd movement
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] and self.rect.y > 0:
-            self.rect.y -= velo
+            self.rect.y -= self.velo
         if keys[pygame.K_a] and self.rect.x > 0:
-            self.rect.x -= velo
+            self.rect.x -= self.velo
         if keys[pygame.K_s] and self.rect.y < screen_height - self.height:
-            self.rect.y += velo
+            self.rect.y += self.velo
         if keys[pygame.K_d] and self.rect.x < screen_width - self.width:
-            self.rect.x += velo
+            self.rect.x += self.velo
 
-    def _borders(self):
-        if self.rect.y <= 0:
-            self.rect.y = 0
-        elif self.rect.y >= screen_height:
-            self.rect.y = screen_height
-        
-        if self.rect.x <= 0:
-            self.rect.x = 0
-        elif self.rect.x >= screen_width:
-            self.rect.x = screen_width
+        #boundary
+        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
+        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
     
     def draw(self, screen):
         if not self.dead:
             pygame.draw.rect(screen, self.color, self.rect)
     
-    def draw_health_bar(self, screen):
-        #displays hp of player
-        health_bar_width = (self.health / self.max_health) * 100
-
-        
+    def draw_health(self, screen):
+        #hp bar on player
+        current_hp = (self.health / self.max_health) * 100
         pygame.draw.rect(screen, (255,0,0), (self.rect.x - 39, self.rect.y - 15, 100, 5))
-        pygame.draw.rect(screen, (0,255,0), (self.rect.x - 39, self.rect.y - 15, health_bar_width, 5))
-
+        pygame.draw.rect(screen, (0,255,0), (self.rect.x - 39, self.rect.y - 15, current_hp, 5))
+        #hp bar on hud
+        hud_healthbar_x = 470
+        hud_healthbar_y = 620
+        pygame.draw.rect(screen, (255,0,0), (hud_healthbar_x, hud_healthbar_y, 300, 30))
+        pygame.draw.rect(screen, (0,255,0), (hud_healthbar_x, hud_healthbar_y, current_hp*3, 30))
 
 class Door():
     def __init__(self, x=200, y=0, width=60, height=10):
@@ -85,7 +79,7 @@ class Door():
         else:
             self.color = 'Red'
     
-    def _generate_new_door():
+    def generate_new_door():
         #door locations simplified
         topside = Door(random.randrange(0, screen_width - 60, 60), 0, 60, 10)
         bottomside = Door(random.randrange(0, screen_width - 60, 60), (screen_height - 10), 60, 10)
@@ -97,20 +91,20 @@ class Door():
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
 class Score():
-    def __init__(self, level, pos=(700,20)):
+    def __init__(self, level, pos=(20,620)):
         self.level = level
         self.pos = pos
-        self.font = pygame.font.Font(None,30)
+        self.font = pygame.font.Font(None,40)
 
     def draw(self,screen):
         text = self.font.render(f"Lvl: {self.level}", True, 'White')
         screen.blit(text, self.pos)
 
 class Hostile():
-    def __init__(self, width=40, height=40):
-        self.width = width
-        self.height = height
-        self.rect = pygame.Rect(random.randrange(screen_width - width), random.randrange(screen_height - height), width, height)
+    def __init__(self):
+        self.width = 80
+        self.height = 80
+        self.rect = pygame.Rect(random.randrange(screen_width - self.width), random.randrange(screen_height - self.height), self.width, self.height)
         self.color = pygame.Color('Red')
         self.base_velocity = 2
         self.velocity = self.base_velocity
@@ -118,8 +112,8 @@ class Hostile():
         self.direction_y = random.choice([-1, 1])
 
     def update(self, player, score):
-        self._check_level(player, score)
-        self._update_position()
+        self._difficulty(score)
+        self._movement(player)
         #damage to player
         if self.rect.colliderect(player.rect):
             self.color = 'Blue'
@@ -128,26 +122,33 @@ class Hostile():
         else:
             self.color = 'Red'
     
-    def _check_level(self, player, score):
-        # if score.level > 20:
-        #     self.velocity = self.base_velocity * 5
-        # elif score.level > 15:
-        #     self.velocity = self.base_velocity * 4
-        if score.level > 10:
-            self.velocity = self.base_velocity * 3
-        elif score.level > 5:
-            self.velocity = self.base_velocity * 2
 
-    def _update_position(self):
+    def _difficulty(self, score):
+        if score.level > 15:
+            self.velocity = self.base_velocity * 1.3
+        elif score.level > 10:
+            self.velocity = self.base_velocity * 1.2
+        elif score.level > 5:
+            self.velocity = self.base_velocity * 1.1
+            self.width = 10
+            self.height = 10
+
+    def _movement(self, player):
         #movement of hostile
-        self.rect.x += self.velocity * self.direction_x
-        self.rect.y += self.velocity * self.direction_y
-        #east/west walls
-        if self.rect.left < 0 or self.rect.right > screen_width:
-            self.direction_x *= -1
-        #north/south walls
-        if self.rect.top < 0 or self.rect.bottom > screen_height:
-            self.direction_y *= -1
+        if self.rect.x < player.rect.x:
+            self.rect.x += self.velocity
+        elif self.rect.x > player.rect.x:
+            self.rect.x -= self.velocity
+
+        if self.rect.y < player.rect.y:
+            self.rect.y += self.velocity
+        elif self.rect.y > player.rect.y:
+            self.rect.y -= self.velocity
+        
+        #boundary
+        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
+        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
+
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -162,6 +163,7 @@ def generate_level(player, door, hostile):
         player.rect.topleft = (door.rect.centerx - player.rect.width // 2, screen_height - player.rect.height)
     elif door.rect.y == screen_height - door.rect.height:
         player.rect.topleft = (door.rect.centerx - player.rect.width // 2, 0)
+    #door constant (for new levels)
     door.color = 'Yellow'
     door.is_open = False
 
@@ -197,8 +199,6 @@ def main():
             #retry button
             #quit button
             running = False
-
-
         #updates
         player.update()
         hostile.update(player, score)
@@ -206,13 +206,13 @@ def main():
 
         #background fill
         display_bg_color = ((15,30,15))
-        console_color = ((255, 244, 210))
+        console_color = ((60, 60, 60))
         screen.fill(console_color)
         pygame.draw.rect(screen, display_bg_color, (0, 0, screen_width, screen_height))
 
         #draw
         player.draw(screen)
-        player.draw_health_bar(screen)
+        player.draw_health(screen)
         door.draw(screen)
         score.draw(screen)
         hostile.draw(screen)
@@ -222,7 +222,7 @@ def main():
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             score.level = level
-            door = Door._generate_new_door()
+            door = Door.generate_new_door()
         
         pygame.display.update()
         clock.tick(60) #fps
