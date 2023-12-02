@@ -106,9 +106,11 @@ class Level():
 
 class Hostile():
     def __init__(self):
+        self.x = 700
+        self.y = 300
         self.width = 80
         self.height = 80
-        self.rect = pygame.Rect(random.randrange(screen_width - self.width), random.randrange(screen_height - self.height), self.width, self.height)
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.color = pygame.Color('Red')
         self.base_velocity = 2
         self.velocity = self.base_velocity
@@ -117,7 +119,8 @@ class Hostile():
 
     def update(self, player, level):
         self._movement(player)
-        self._difficulty(level)
+        self._speed(level)
+        # self._spawns(level)
         
         #damage to player
         if self.rect.colliderect(player.rect):
@@ -127,17 +130,19 @@ class Hostile():
         else:
             self.color = 'Red'
 
-    def _difficulty(self, score):
-        if score.level > 15:
+    def _speed(self, level):
+        if level > 15:
             self.velocity = self.base_velocity * 1.3
-        elif score.level > 10:
+        elif level > 10:
             self.velocity = self.base_velocity * 1.2
-        elif score.level > 5:
+        elif level > 5:
             self.velocity = self.base_velocity * 1.1
-            self.width = 10
-            self.height = 10
-
+            
     def _movement(self, player):
+        #boundary
+        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
+        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
+        
         #movement of hostile
         if self.rect.x < player.rect.x:
             self.rect.x += self.velocity
@@ -148,30 +153,18 @@ class Hostile():
             self.rect.y += self.velocity
         elif self.rect.y > player.rect.y:
             self.rect.y -= self.velocity
-        
-        #boundary
-        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
-        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
+    
+    # def _spawns(self, level):
+    #     if level > 15:
+    #         #spawn 3 hostiles
+    #     elif level > 5:
+    #         #spawn 2 hostiles
+    #     else:
+    #         return
+
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
-
-# class Coin():
-#     def __init__(self):
-#         self.width = 20
-#         self.height = 24
-#         self.color = 'Yellow'
-#         randscreen_width = random.randrange(screen_width - self.width)
-#         randscreen_height = random.randrange(screen_height - self.height)
-#         self.rect = pygame.Rect(randscreen_width, randscreen_height, self.width, self.height)
-
-#     def update(self, player, coins):
-#         if self.rect.colliderect(player.rect):
-#             print(f'{len(coins)}x Collected!')
-#             coins.append(self)
-
-#     def draw(self, screen):
-#         pygame.draw.rect(screen, self.color, self.rect)
 
 class Heart():
     def __init__(self):
@@ -240,8 +233,6 @@ def main():
     player = Player()
     door = Door()
     hostile = Hostile()
-    # coins = []
-    # coin = Coin()
     
     heart = Heart()
     generate_level(player, door, hostile)
@@ -263,10 +254,8 @@ def main():
         #updates
         player.update()
         door.update(player)
-        hostile.update(player, score)
+        hostile.update(player, level)
         heart.update(player)
-        # coin.update(player, coins)
-
 
         #background fill
         display_bg_color = ((15,30,15))
@@ -280,7 +269,6 @@ def main():
         door.draw(screen)
         score.draw(screen)
         hostile.draw(screen)
-        # coin.draw(screen)
         heart.draw(screen)
 
         if door.is_open:
