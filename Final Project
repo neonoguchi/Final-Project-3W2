@@ -63,8 +63,9 @@ class Player():
         #hp bar on hud
         hud_healthbar_x = 470
         hud_healthbar_y = 620
-        pygame.draw.rect(screen, (255,0,0), (hud_healthbar_x, hud_healthbar_y, 300, 30))
-        pygame.draw.rect(screen, (0,255,0), (hud_healthbar_x, hud_healthbar_y, current_hp*3, 30))
+        hud_healthbar_height = 30
+        pygame.draw.rect(screen, (255,0,0), (hud_healthbar_x, hud_healthbar_y, 300, hud_healthbar_height))
+        pygame.draw.rect(screen, (0,255,0), (hud_healthbar_x, hud_healthbar_y, current_hp*3, hud_healthbar_height))
 
 class Door():
     def __init__(self, x=200, y=0, width=60, height=10):
@@ -82,7 +83,7 @@ class Door():
         else:
             self.color = 'Red'
     
-    def generate_new_door():
+    def generate_new_door(self):
         #door locations simplified
         topside = Door(random.randrange(0, screen_width - 60, 60), 0, 60, 10)
         bottomside = Door(random.randrange(0, screen_width - 60, 60), (screen_height - 10), 60, 10)
@@ -115,12 +116,13 @@ class Hostile():
         self.direction_y = random.choice([-1, 1])
 
     def update(self, player, level):
-        self._difficulty(level)
         self._movement(player)
+        self._difficulty(level)
+        
         #damage to player
         if self.rect.colliderect(player.rect):
             self.color = 'Blue'
-            player.take_dmg(5)
+            player.take_dmg(1)
             print(player.health)
         else:
             self.color = 'Red'
@@ -154,15 +156,22 @@ class Hostile():
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
 
-class Coin():
-    def __init__(self):
-        self.width = 20
-        self.height = 24
-        self.color = 'Yellow'
-        self.rect = pygame.Rect(random.randrange(screen_width - self.width), random.randrange(screen_height - self.height), self.width, self.height)
+# class Coin():
+#     def __init__(self):
+#         self.width = 20
+#         self.height = 24
+#         self.color = 'Yellow'
+#         randscreen_width = random.randrange(screen_width - self.width)
+#         randscreen_height = random.randrange(screen_height - self.height)
+#         self.rect = pygame.Rect(randscreen_width, randscreen_height, self.width, self.height)
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
+#     def update(self, player, coins):
+#         if self.rect.colliderect(player.rect):
+#             print(f'{len(coins)}x Collected!')
+#             coins.append(self)
+
+#     def draw(self, screen):
+#         pygame.draw.rect(screen, self.color, self.rect)
 
 class Heart():
     def __init__(self):
@@ -170,6 +179,33 @@ class Heart():
         self.height = 16
         self.color = 'Red'
         self.rect = pygame.Rect(random.randrange(screen_width - self.width), random.randrange(screen_height - self.height), self.width, self.height)
+
+    def update(self, player):
+        if self.rect.colliderect(player.rect):
+            if player.health < 100:
+                if player.health == 99:
+                    player.health += 1
+                if player.health == 98:
+                    player.health += 2
+                if player.health == 97:
+                    player.health += 3
+                if player.health == 96:
+                    player.health += 4
+                if player.health == 95:
+                    player.health += 5
+                if player.health == 94:
+                    player.health += 6
+                if player.health == 93:
+                    player.health += 7
+                if player.health == 92:
+                    player.health += 8
+                if player.health == 91:
+                    player.health += 9
+                if player.health <= 90:
+                    player.health +=10
+                
+                #get rid of heart after collected
+
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)    
@@ -204,7 +240,9 @@ def main():
     player = Player()
     door = Door()
     hostile = Hostile()
-    coin = Coin()
+    # coins = []
+    # coin = Coin()
+    
     heart = Heart()
     generate_level(player, door, hostile)
 
@@ -226,6 +264,9 @@ def main():
         player.update()
         door.update(player)
         hostile.update(player, score)
+        heart.update(player)
+        # coin.update(player, coins)
+
 
         #background fill
         display_bg_color = ((15,30,15))
@@ -239,7 +280,7 @@ def main():
         door.draw(screen)
         score.draw(screen)
         hostile.draw(screen)
-        coin.draw(screen)
+        # coin.draw(screen)
         heart.draw(screen)
 
         if door.is_open:
@@ -247,7 +288,7 @@ def main():
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             score.level = level
-            door = Door.generate_new_door()
+            door = Door.generate_new_door(door)
         
         pygame.display.update()
         clock.tick(60) #fps
