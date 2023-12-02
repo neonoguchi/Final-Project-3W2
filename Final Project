@@ -94,7 +94,7 @@ class Door():
     def draw(self,screen):
         pygame.draw.rect(screen, pygame.Color(self.color), self.rect)
 
-class Level():
+class Score():
     def __init__(self, level, pos=(20,620)):
         self.level = level
         self.pos = pos
@@ -172,38 +172,18 @@ class Heart():
         self.height = 16
         self.color = 'Red'
         self.rect = pygame.Rect(random.randrange(screen_width - self.width), random.randrange(screen_height - self.height), self.width, self.height)
+        self.collected = False
 
     def update(self, player):
-        if self.rect.colliderect(player.rect):
-            if player.health < 100:
-                if player.health == 99:
-                    player.health += 1
-                if player.health == 98:
-                    player.health += 2
-                if player.health == 97:
-                    player.health += 3
-                if player.health == 96:
-                    player.health += 4
-                if player.health == 95:
-                    player.health += 5
-                if player.health == 94:
-                    player.health += 6
-                if player.health == 93:
-                    player.health += 7
-                if player.health == 92:
-                    player.health += 8
-                if player.health == 91:
-                    player.health += 9
-                if player.health <= 90:
-                    player.health +=10
-                
-                #get rid of heart after collected
-
+        if self.rect.colliderect(player.rect) and not self.collected:
+            player.health = min(100, player.health + 10)
+            self.collected = True
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)    
+        if not self.collected:
+            pygame.draw.rect(screen, self.color, self.rect)    
 
-def generate_level(player, door, hostile):
+def generate_level(player, door, hostile, heart):
     #player spawn based off of previous door
     if door.rect.x == 0:
         player.rect.topleft = (screen_width - player.rect.width, door.rect.centery - player.rect.height // 2)
@@ -217,9 +197,14 @@ def generate_level(player, door, hostile):
     door.color = 'Yellow'
     door.is_open = False
 
-    #hostile spawn
+    #hostile spawn location (per lvl)
     hostile.rect.x = random.randrange(screen_width - hostile.width)
     hostile.rect.y = random.randrange(screen_height - hostile.height)
+
+    #heart spawn location (per lvl)
+    heart = Heart()
+    heart.rect.x = random.randrange(screen_width - hostile.width)
+    heart.rect.y = random.randrange(screen_height - hostile.height)
 
 def main():
     pygame.init()
@@ -228,14 +213,13 @@ def main():
     clock = pygame.time.Clock()
     
     level = 1
-    score= Level(level)
-    
+    score= Score(level)
+
     player = Player()
     door = Door()
     hostile = Hostile()
-    
     heart = Heart()
-    generate_level(player, door, hostile)
+    generate_level(player, door, hostile, heart)
 
     #game loop
     running = True
@@ -272,11 +256,12 @@ def main():
         heart.draw(screen)
 
         if door.is_open:
-            generate_level(player, door, hostile)
+            generate_level(player, door, hostile, heart)
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             score.level = level
             door = Door.generate_new_door(door)
+            heart = Heart()
         
         pygame.display.update()
         clock.tick(60) #fps
