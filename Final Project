@@ -29,7 +29,7 @@ class Player():
         #checks for movement
         self._movement()
         #checks if player is alive
-        if self.health < 1:
+        if self.health <= 0:
             self.dead = True
     
     def take_dmg(self, damage):
@@ -110,9 +110,8 @@ class Hostile():
     def __init__(self):
         self.x = 700
         self.y = 300
-        self.width = 80
-        self.height = 80
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.size = 80
+        self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
         self.color = pygame.Color('Red')
         self.base_velocity = 1
         self.velocity = self.base_velocity
@@ -143,19 +142,19 @@ class Hostile():
             
     def _movement(self, player):
         #boundary
-        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
-        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
+        self.rect.x = max(0, min(self.rect.x, screen_width - self.size))
+        self.rect.y = max(0, min(self.rect.y, screen_height - self.size))
         
         #movement of hostile
-        if self.rect.x < player.rect.x:
-            self.rect.x += self.velocity
-        elif self.rect.x > player.rect.x:
-            self.rect.x -= self.velocity
+        if self.rect.centerx < player.rect.centerx:
+            self.rect.centerx += self.velocity
+        elif self.rect.centerx > player.rect.centerx:
+            self.rect.centerx -= self.velocity
 
-        if self.rect.y < player.rect.y:
-            self.rect.y += self.velocity
-        elif self.rect.y > player.rect.y:
-            self.rect.y -= self.velocity
+        if self.rect.centery < player.rect.centery:
+            self.rect.centery += self.velocity
+        elif self.rect.centery > player.rect.centery:
+            self.rect.centery -= self.velocity
 
     def draw(self):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -171,6 +170,7 @@ class Heart():
     def update(self, player):
         if self.rect.colliderect(player.rect) and not self.collected:
             player.health = min(100, player.health + 10)
+            print("+10 HP")
             self.collected = True
 
     def draw(self):
@@ -210,8 +210,18 @@ def generate_level(player, door, hostile, heart, key):
     door.is_open = False
 
     #hostile spawn location (per lvl)
-    hostile.rect.x = random.randrange(screen_width - hostile.width)
-    hostile.rect.y = random.randrange(screen_height - hostile.height)
+    if player.rect.x == 0:
+        hostile.rect.topleft = (screen_width - hostile.rect.width, player.rect.centery - hostile.rect.height // 2)
+    elif player.rect.x == screen_width - player.rect.width:
+        hostile.rect.topleft = (0, player.rect.centery - hostile.rect.height // 2)
+    elif player.rect.y == 0:
+        hostile.rect.topleft = (player.rect.centerx - hostile.rect.width // 2, screen_height - hostile.rect.height)
+    elif player.rect.y == screen_height - player.rect.height:
+        hostile.rect.topleft = (player.rect.centerx - hostile.rect.width // 2, 0)
+
+
+    # hostile.rect.x = random.randrange(screen_width - hostile.size)
+    # hostile.rect.y = random.randrange(screen_height - hostile.size)
 
     #heart spawn location (per lvl)
     heart = Heart()
@@ -276,9 +286,9 @@ def main():
         player.draw_health()
         door.draw()
         score.draw()
-        hostile.draw()
-        heart.draw()
         key.draw()
+        heart.draw()
+        hostile.draw()
 
         if door.is_open:
             generate_level(player, door, hostile, heart, key)
