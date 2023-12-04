@@ -78,14 +78,19 @@ class Door():
         self.is_unlocked = False
     
     def update(self, player):
-        #player interact
-        if self.rect.colliderect(player.rect) and self.is_unlocked:
-            self.color = 'Yellow'
-            #[E] interact with door
-            if pygame.key.get_pressed()[pygame.K_e]:
-                self.is_open = True
+        #[E] interact with door
+        if self.rect.colliderect(player.rect):
+            if not self.is_unlocked:
+                self.color = ((180,10,10))
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    print("Door locked.")
+            elif self.is_unlocked:
+                self.color = 'Yellow'
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    self.is_open = True
         else:
             self.color = 'Red'
+
     
     def generate_new_door(self):
         #door locations simplified
