@@ -14,14 +14,15 @@ screen_height = 600
 screen_dimensions = (screen_width,screen_height)
 screen = pygame.display.set_mode(window_dimensions)
 
-class Player():
+class Player(pygame.sprite.Sprite):
     def __init__(self):
+        super().__init__()
         self.x = 600
         self.y = 550
-        self.width = 25
-        self.height = 25
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.color = pygame.Color(0, 210, 0)
+        self.size = 32
+        self.image = pygame.image.load('images//robot.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image, (self.size, self.size))
+        self.rect = self.image.get_rect()
         self.velo = 5
         self.health = 100
         self.max_health = self.health
@@ -45,18 +46,18 @@ class Player():
             self.rect.y -= self.velo
         if keys[pygame.K_a] and self.rect.x > 0:
             self.rect.x -= self.velo
-        if keys[pygame.K_s] and self.rect.y < screen_height - self.height:
+        if keys[pygame.K_s] and self.rect.y < screen_height - self.size:
             self.rect.y += self.velo
-        if keys[pygame.K_d] and self.rect.x < screen_width - self.width:
+        if keys[pygame.K_d] and self.rect.x < screen_width - self.size:
             self.rect.x += self.velo
 
         #boundary
-        self.rect.x = max(0, min(self.rect.x, screen_width - self.width))
-        self.rect.y = max(0, min(self.rect.y, screen_height - self.height))
+        self.rect.x = max(0, min(self.rect.x, screen_width - self.size))
+        self.rect.y = max(0, min(self.rect.y, screen_height - self.size))
     
     def draw(self):
         if not self.dead:
-            pygame.draw.rect(screen, self.color, self.rect)
+            screen.blit(self.image, self.rect)
     
     def draw_health(self):
         #hp bar on player
@@ -78,15 +79,21 @@ class Door():
         self.is_unlocked = False
     
     def update(self, player):
+        #sound constants
+        door_open_sfx = pygame.mixer.Sound("sounds//door_open.mp3")
+        door_locked_sfx = pygame.mixer.Sound("sounds//door_locked.mp3")
+
         #[E] interact with door
         if self.rect.colliderect(player.rect):
             if not self.is_unlocked:
                 self.color = ((180,10,10))
                 if pygame.key.get_pressed()[pygame.K_e]:
+                    door_locked_sfx.play()
                     print("Door locked.")
             elif self.is_unlocked:
                 self.color = 'Yellow'
                 if pygame.key.get_pressed()[pygame.K_e]:
+                    door_open_sfx.play()
                     self.is_open = True
         else:
             self.color = 'Red'
@@ -128,7 +135,6 @@ class Hostile():
     def update(self, player, level):
         self._movement(player)
         self._speed(level)
-        # self._size(level)
         
         #damage to player
         if self.rect.colliderect(player.rect):
@@ -137,17 +143,6 @@ class Hostile():
             print(player.health)
         else:
             self.color = 'Red'
-
-    # def _size(self, level):
-    #     if level >= 20:
-    #         self.size = 80
-    #     elif level >= 15:
-    #         self.size = 80
-    #     elif level >= 10:
-    #         self.size = 240
-    #     elif level >= 5:
-    #         self.size = 90
-        # right now it increases the width and height of rectangle but not the drawn rectangle
 
     def _speed(self, level):
         if level >= 20:
@@ -182,7 +177,7 @@ class Heart(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.size = 32
-        self.image = pygame.image.load('heart.png').convert_alpha()
+        self.image = pygame.image.load('images//heart.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.size, self.size))
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(screen_width - self.size)
@@ -190,8 +185,11 @@ class Heart(pygame.sprite.Sprite):
         self.collected = False
 
     def update(self, player):
+        heart_sfx = pygame.mixer.Sound("sounds//heal_sound.mp3")
+        
         if self.rect.colliderect(player.rect) and not self.collected:
             player.health = min(100, player.health +  20)
+            heart_sfx.play()
             print("+20 HP")
             self.collected = True
             self.kill()
@@ -204,15 +202,18 @@ class Key(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.size = 16
-        self.image = pygame.image.load('key.png').convert_alpha()
+        self.image = pygame.image.load('images//key.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.size, self.size))
         self.rect = self.image.get_rect()
         self.collected = False
 
     def update(self, player, door):
+        coin_sfx = pygame.mixer.Sound("sounds//key_sound.mp3")
+        
         if self.rect.colliderect(player.rect) and not self.collected:
             door.is_unlocked = True
             self.collected = True
+            coin_sfx.play()
             print("Key collected!")
 
     def draw(self):
@@ -267,9 +268,9 @@ def main():
     door = Door()
     hostile = Hostile()
     # heart = Heart()
-    hearts = pygame.sprite.Group()
+    sprites = pygame.sprite.Group()
     key = Key()
-    generate_level(player, door, hostile, hearts, key)
+    generate_level(player, door, hostile, sprites, key)
 
     #game loop
     running = True
@@ -278,12 +279,8 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        #GAME JOVER
+        #GAME OVER
         if player.dead:
-            #display game over screen that has:
-            #"GAME OVER" text
-            #retry button
-            #quit button
             running = False
             if score.level > high_score:
                 print(f"New High Score of {score.level}!")
@@ -294,8 +291,7 @@ def main():
         player.update()
         door.update(player)
         hostile.update(player, level)
-        # heart.update(player)
-        hearts.update(player)
+        sprites.update(player)
         key.update(player, door)
 
         #background fill
@@ -311,16 +307,17 @@ def main():
         score.draw()
         key.draw()
         # heart.draw()
-        hearts.draw(screen)
+        sprites.draw(screen)
         hostile.draw()
 
         if door.is_open:
+            
             level += 1
             print(f"Door opened! Transitioning to level {level}")
             score.level = level
-            hearts.empty()
+            sprites.empty()
             key = Key()
-            generate_level(player, door, hostile, hearts, key)
+            generate_level(player, door, hostile, sprites, key)
             door = Door.generate_new_door(door)
         
         pygame.display.update()

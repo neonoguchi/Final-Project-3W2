@@ -7,4 +7,10 @@ Demo Video: <URL>
 ## GitHub Repository
 GitHub Repo: <https://github.com/neonoguchi/Final-Project-3W2>
 
+## Credit for Tutroials
+
+
+## Credit for Assets
+
+
 ## Description
